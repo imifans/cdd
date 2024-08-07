@@ -17,5 +17,11 @@ def image_read_cv2(path, mode='RGB'):
 def img_save(image,imagename,savepath):
     if not os.path.exists(savepath):
         os.makedirs(savepath)
+    # Convert image to 8-bit if it's a floating point grayscale image
+    
+    if image.dtype == np.float32 or image.dtype == np.float64:
+        # Normalize the image to 0-255
+        image = (255 * (image - np.min(image)) / (np.max(image) - np.min(image))).astype(np.uint8)
+    
     # Gray_pic
     imsave(os.path.join(savepath, "{}.png".format(imagename)),image)
