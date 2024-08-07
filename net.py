@@ -116,11 +116,16 @@ class BaseFeatureExtraction(nn.Module):
         self.norm1 = LayerNorm(dim, 'WithBias')
         self.attn = AttentionBase(dim, num_heads=num_heads, qkv_bias=qkv_bias,)
         self.norm2 = LayerNorm(dim, 'WithBias')
-        self.mlp = Mlp(in_features=dim,
-                       ffn_expansion_factor=ffn_expansion_factor,)
+        # 多层感知机 实现前向传播网络，用于增强特征的非线性表示。
+        self.mlp = Mlp(in_features=dim,ffn_expansion_factor=ffn_expansion_factor,)
     def forward(self, x):
-        x = x + self.attn(self.norm1(x))
-        x = x + self.mlp(self.norm2(x))
+        print(x.shape)
+        norm = self.norm1(x)
+        x = x + self.attn(norm)
+        print(x.shape)
+        norm2 = self.norm2(x)
+        x = x + self.mlp(norm2)
+        print(x.shape)
         return x
 
 
@@ -158,8 +163,7 @@ class DetailNode(nn.Module):
         z1, z2 = x[:, :x.shape[1]//2], x[:, x.shape[1]//2:x.shape[1]]
         return z1, z2
     def forward(self, z1, z2):
-        z1, z2 = self.separateFeature(
-            self.shffleconv(torch.cat((z1, z2), dim=1)))
+        z1, z2 = self.separateFeature(self.shffleconv(torch.cat((z1, z2), dim=1)))
         z2 = z2 + self.theta_phi(z1)
         z1 = z1 * torch.exp(self.theta_rho(z2)) + self.theta_eta(z2)
         return z1, z2
